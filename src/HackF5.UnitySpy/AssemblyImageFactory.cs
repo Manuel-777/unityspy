@@ -42,29 +42,50 @@
             var process = new ProcessFacade(processId);
             var monoModule = AssemblyImageFactory.GetMonoModule(process);
             var moduleDump = process.ReadModule(monoModule);
+
+            File.WriteAllBytes("monoDump", moduleDump);
+
             var rootDomainFunctionAddress = AssemblyImageFactory.GetRootDomainFunctionAddress(moduleDump, monoModule);
 
             return AssemblyImageFactory.GetAssemblyImage(process, assemblyName, rootDomainFunctionAddress);
         }
 
-        private static AssemblyImage GetAssemblyImage(ProcessFacade process, string name, int rootDomainFunctionAddress)
+        private static AssemblyImage GetAssemblyImage(ProcessFacade process, string name, IntPtr rootDomainFunctionAddress)
         {
-            var domainAddress = process.ReadPtr((uint)rootDomainFunctionAddress + 1);
+            // Offsets taken by decompiling the 64 bits version of mono-2.0-bdwgc.dll
+            // mov rax, [rip + 0x46ad39]
+            // ret
+            var offset = process.ReadInt32(rootDomainFunctionAddress + 3) + 7;
+
             //// pointer to struct of type _MonoDomain
-            var domain = process.ReadPtr(domainAddress);
+            var domain = process.ReadPtr(rootDomainFunctionAddress + offset);
+
+            MemoryReadingUtils memReader = new MemoryReadingUtils(process);
+            //memReader.ReadMemory(assembly, 220, 1, 1);
 
             //// pointer to array of structs of type _MonoAssembly
-            var assemblyArrayAddress = process.ReadPtr(domain + MonoLibraryOffsets.ReferencedAssemblies);
+            var assemblyArrayAddress = process.ReadPtr(IntPtr.Add(domain, MonoLibraryOffsets.ReferencedAssemblies));
             for (var assemblyAddress = assemblyArrayAddress;
                 assemblyAddress != Constants.NullPtr;
-                assemblyAddress = process.ReadPtr(assemblyAddress + 0x4))
+                assemblyAddress = process.ReadPtr(assemblyAddress + 0x8)) //size of pointer
             {
                 var assembly = process.ReadPtr(assemblyAddress);
-                var assemblyNameAddress = process.ReadPtr(assembly + 0x8);
+                var assemblyNameAddress = process.ReadPtr(assembly + 0x10); //ponter + int32
+
+
+//                memReader.ReadMemory(assembly, 220, 4, 0);
+
                 var assemblyName = process.ReadAsciiString(assemblyNameAddress);
                 if (assemblyName == name)
                 {
-                    return new AssemblyImage(process, process.ReadPtr(assembly + MonoLibraryOffsets.AssemblyImage));
+                    //memReader.ReadMemory(assembly, 220, 1, 1);
+
+                    return new AssemblyImage(process, process.ReadPtr(IntPtr.Add(assembly, MonoLibraryOffsets.AssemblyImage)));
+                    //return new AssemblyImage(process, process.ReadPtr(assembly + 0x44)); -> CollectionManager is null if we have this
+                    //return new AssemblyImage(process, process.ReadPtr(assembly + 0x54)); -> CollectionManager is null if we have this
+                    //return new AssemblyImage(process, process.ReadPtr(assembly + 0x6c)); -> CollectionManager is null if we have this
+                    //return new AssemblyImage(process, process.ReadPtr(assembly + 0xac)); -> CollectionManager is null if we have this
+                    //return new AssemblyImage(process, process.ReadPtr(assembly + 0xac));
                 }
             }
 
@@ -104,39 +125,48 @@
                 modules.Add(module);
             }
 
-            return modules.FirstOrDefault(module => module.ModuleName == "mono.dll");
+            return modules.FirstOrDefault(module => module.ModuleName == "mono-2.0-bdwgc.dll");
         }
 
-        private static int GetRootDomainFunctionAddress(byte[] moduleDump, ModuleInfo monoModuleInfo)
+        private static IntPtr GetRootDomainFunctionAddress(byte[] moduleDump, ModuleInfo monoModuleInfo)
         {
+
+            var peHeader = new PeNet.PeFile(moduleDump);
+            var _if = peHeader.ImportedFunctions;
+            var ef = peHeader.ExportedFunctions;
+
+
             // offsets taken from https://docs.microsoft.com/en-us/windows/desktop/Debug/pe-format
             // ReSharper disable once CommentTypo
             var startIndex = moduleDump.ToInt32(0x3c); // lfanew
 
-            var exportDirectoryIndex = startIndex + 0x78;
+
+
+            var exportDirectoryIndex = startIndex + 0x88;// 0x78;
             var exportDirectory = moduleDump.ToInt32(exportDirectoryIndex);
 
             var numberOfFunctions = moduleDump.ToInt32(exportDirectory + 0x14);
             var functionAddressArrayIndex = moduleDump.ToInt32(exportDirectory + 0x1c);
             var functionNameArrayIndex = moduleDump.ToInt32(exportDirectory + 0x20);
 
-            var rootDomainFunctionAddress = Constants.NullPtr;
-            for (var functionIndex = Constants.NullPtr;
-                functionIndex < (numberOfFunctions * Constants.SizeOfPtr);
-                functionIndex += (int)Constants.SizeOfPtr)
+            var sizeOfFunctionEntry = 4;
+
+            IntPtr rootDomainFunctionAddress = (IntPtr) Constants.NullPtr;
+            for (var functionIndex = 0;
+                functionIndex < (numberOfFunctions * sizeOfFunctionEntry);
+                functionIndex += sizeOfFunctionEntry)
             {
                 var functionNameIndex = moduleDump.ToInt32(functionNameArrayIndex + functionIndex);
                 var functionName = moduleDump.ToAsciiString(functionNameIndex);
                 if (functionName == "mono_get_root_domain")
                 {
-                    rootDomainFunctionAddress = monoModuleInfo.BaseAddress.ToInt32()
-                        + moduleDump.ToInt32(functionAddressArrayIndex + functionIndex);
+                    rootDomainFunctionAddress = monoModuleInfo.BaseAddress + moduleDump.ToInt32(functionAddressArrayIndex + functionIndex);
 
                     break;
                 }
             }
 
-            if (rootDomainFunctionAddress == Constants.NullPtr)
+            if (rootDomainFunctionAddress == (IntPtr) Constants.NullPtr)    
             {
                 throw new InvalidOperationException("Failed to find mono_get_root_domain function.");
             }

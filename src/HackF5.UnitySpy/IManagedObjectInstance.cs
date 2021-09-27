@@ -1,5 +1,6 @@
 ﻿namespace HackF5.UnitySpy
 {
+    using System;
     using JetBrains.Annotations;
 
     /// <summary>
@@ -50,5 +51,7 @@
         /// The value of the field in the instance with the given <paramref name="fieldName"/>.
         /// </returns>
         TValue GetValue<TValue>(string fieldName, string typeFullName);
+
+        IntPtr GetAddress();
     }
 }

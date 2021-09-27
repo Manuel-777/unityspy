@@ -21,20 +21,24 @@
 
         public Process Process { get; }
 
-        public string ReadAsciiString(uint address, int maxSize = 1024)
+        public string ReadAsciiString(IntPtr address, int maxSize = 1024)
         {
             return this.ReadBufferValue(address, maxSize, b => b.ToAsciiString());
         }
 
-        public string ReadAsciiStringPtr(uint address, int maxSize = 1024) =>
+        public string ReadAsciiStringPtr(IntPtr address, int maxSize = 1024) =>
             this.ReadAsciiString(this.ReadPtr(address), maxSize);
 
-        public int ReadInt32(uint address)
+        public int ReadInt32(IntPtr address)
         {
             return this.ReadBufferValue(address, sizeof(int), b => b.ToInt32());
         }
+        public long ReadInt64(IntPtr address)
+        {
+            return this.ReadBufferValue(address, sizeof(long), b => b.ToInt64());
+        }
 
-        public object ReadManaged([NotNull] TypeInfo type, uint address)
+        public object ReadManaged([NotNull] TypeInfo type, IntPtr address)
         {
             if (type == null)
             {
@@ -70,10 +74,12 @@
                     return this.ReadUInt32(address);
 
                 case TypeCode.I8:
-                    return this.ReadBufferValue(address, sizeof(char), ConversionUtils.ToInt64);
+                    return this.ReadInt64(address);
+                    //return this.ReadBufferValue(address, sizeof(char), ConversionUtils.ToInt64);
 
                 case TypeCode.U8:
-                    return this.ReadBufferValue(address, sizeof(char), ConversionUtils.ToUInt64);
+                    return this.ReadUInt64(address);
+                    //return this.ReadBufferValue(address, sizeof(char), ConversionUtils.ToUInt64);
 
                 case TypeCode.R4:
                     return this.ReadBufferValue(address, sizeof(char), ConversionUtils.ToSingle);
@@ -88,7 +94,13 @@
                     return this.ReadManagedArray(type, address);
 
                 case TypeCode.VALUETYPE:
-                    return this.ReadManagedStructInstance(type, address);
+                    try
+                    {
+                        return this.ReadManagedStructInstance(type, address);
+                    } catch (Exception e)
+                    {
+                        return this.ReadInt32(address);
+                    }
 
                 case TypeCode.CLASS:
                     return this.ReadManagedClassInstance(type, address);
@@ -105,8 +117,11 @@
                 case TypeCode.OBJECT:
                     return this.ReadManagedGenericObject(type, address);
 
-                // may need supporting
                 case TypeCode.VAR:
+                    // Really not sure this is the way to do it
+                    return this.ReadInt32(address);
+
+                // may need supporting
                 case TypeCode.ARRAY:
                 case TypeCode.ENUM:
                 case TypeCode.MVAR:
@@ -146,11 +161,21 @@
             return buffer;
         }
 
-        public uint ReadPtr(uint address) => this.ReadUInt32(address);
+        public IntPtr ReadPtr(IntPtr address) => (IntPtr) this.ReadUInt64(address);// this.ReadUInt32(address);
 
-        public uint ReadUInt32(uint address)
+        public uint ReadUInt32(IntPtr address)
         {
             return this.ReadBufferValue(address, sizeof(uint), b => b.ToUInt32());
+        }
+
+        public ulong ReadUInt64(IntPtr address)
+        {
+            return this.ReadBufferValue(address, sizeof(ulong), b => b.ToUInt64());
+        }
+
+        public byte ReadByte(IntPtr address)
+        {
+            return this.ReadBufferValue(address, sizeof(byte), b => b.ToByte());
         }
 
         [DllImport("kernel32", SetLastError = true)]
@@ -161,7 +186,7 @@
             int nSize,
             out IntPtr lpNumberOfBytesRead);
 
-        private TValue ReadBufferValue<TValue>(uint address, int size, Func<byte[], TValue> read)
+        private TValue ReadBufferValue<TValue>(IntPtr address, int size, Func<byte[], TValue> read)
         {
             var buffer = ByteArrayPool.Instance.Rent(size);
 
@@ -176,7 +201,7 @@
             }
         }
 
-        private object[] ReadManagedArray(TypeInfo type, uint address)
+        private object[] ReadManagedArray(TypeInfo type, IntPtr address)
         {
             var ptr = this.ReadPtr(address);
             if (ptr == Constants.NullPtr)
@@ -194,13 +219,13 @@
             var result = new object[count];
             for (var i = 0; i < count; i++)
             {
-                result[i] = elementDefinition.TypeInfo.GetValue(start + (uint)(i * arrayDefinition.Size));
+                result[i] = elementDefinition.TypeInfo.GetValue(IntPtr.Add(start, i * arrayDefinition.Size));
             }
 
             return result;
         }
 
-        private ManagedClassInstance ReadManagedClassInstance(TypeInfo type, uint address)
+        private ManagedClassInstance ReadManagedClassInstance(TypeInfo type, IntPtr address)
         {
             var ptr = this.ReadPtr(address);
             return ptr == Constants.NullPtr
@@ -208,7 +233,7 @@
                 : new ManagedClassInstance(type.Image, ptr);
         }
 
-        private object ReadManagedGenericObject(TypeInfo type, uint address)
+        private object ReadManagedGenericObject(TypeInfo type, IntPtr address)
         {
             var genericDefinition = type.Image.GetTypeDefinition(this.ReadPtr(type.Data));
             if (genericDefinition.IsValueType)
@@ -219,7 +244,7 @@
             return this.ReadManagedClassInstance(type, address);
         }
 
-        private string ReadManagedString(uint address)
+        private string ReadManagedString(IntPtr address)
         {
             var ptr = this.ReadPtr(address);
             if (ptr == Constants.NullPtr)
@@ -227,18 +252,23 @@
                 return default;
             }
 
-            var length = this.ReadInt32(ptr + 0x8);
+
+            MemoryReadingUtils memReader = new MemoryReadingUtils(this);
+            //memReader.ReadMemory(ptr, 1024, 4, 0);
+
+            var length = this.ReadInt32(ptr + 0x10);
 
             return this.ReadBufferValue(
-                ptr + 0xc,
+                ptr + 0x14,
                 2 * length,
                 b => Encoding.Unicode.GetString(b, 0, 2 * length));
         }
 
-        private object ReadManagedStructInstance(TypeInfo type, uint address)
+        private object ReadManagedStructInstance(TypeInfo type, IntPtr address)
         {
             var definition = type.Image.GetTypeDefinition(type.Data);
             var obj = new ManagedStructInstance(definition, address);
+            //var t = obj.GetValue<object>("enumSeperator");
             return obj.TypeDefinition.IsEnum ? obj.GetValue<object>("value__") : obj;
         }
 
@@ -259,7 +289,7 @@
 
             try
             {
-                var bufferPointer = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, Constants.NullPtr);
+                var bufferPointer = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, Constants.NullPtr.ToInt32());
                 if (!ProcessFacade.ReadProcessMemory(
                     this.Process.Handle,
                     processAddress,

@@ -1,5 +1,6 @@
 ﻿namespace HackF5.UnitySpy.Detail
 {
+    using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
@@ -17,9 +18,9 @@
         private readonly Dictionary<string, TypeDefinition> typeDefinitionsByFullName =
             new Dictionary<string, TypeDefinition>();
 
-        private readonly ConcurrentDictionary<uint, TypeDefinition> typeDefinitionsByAddress;
+        private readonly ConcurrentDictionary<IntPtr, TypeDefinition> typeDefinitionsByAddress;
 
-        public AssemblyImage(ProcessFacade process, uint address)
+        public AssemblyImage(ProcessFacade process, IntPtr address)
             : base(null, address)
         {
             this.Process = process;
@@ -41,7 +42,10 @@
                     continue;
                 }
 
-                this.typeDefinitionsByFullName.Add(definition.FullName, definition);
+                if (!this.typeDefinitionsByFullName.ContainsKey(definition.FullName))
+                {
+                    this.typeDefinitionsByFullName.Add(definition.FullName, definition);
+                }
             }
         }
 
@@ -61,7 +65,7 @@
         public TypeDefinition GetTypeDefinition(string fullTypeName) =>
             this.typeDefinitionsByFullName.TryGetValue(fullTypeName, out var d) ? d : default;
 
-        public TypeDefinition GetTypeDefinition(uint address)
+        public TypeDefinition GetTypeDefinition(IntPtr address)
         {
             if (address == Constants.NullPtr)
             {
@@ -73,19 +77,24 @@
                 key => new TypeDefinition(this, key));
         }
 
-        private ConcurrentDictionary<uint, TypeDefinition> CreateTypeDefinitions()
+        private ConcurrentDictionary<IntPtr, TypeDefinition> CreateTypeDefinitions()
         {
-            var definitions = new ConcurrentDictionary<uint, TypeDefinition>();
+            var definitions = new ConcurrentDictionary<IntPtr, TypeDefinition>();
 
-            const uint classCache = 0x2a0u;
-            var classCacheSize = this.ReadUInt32(classCache + 0xc);
-            var classCacheTableArray = this.ReadPtr(classCache + 0x14);
 
-            for (var tableItem = 0u;
+            MemoryReadingUtils memReader = new MemoryReadingUtils(this.Process);
+            //0x48 is where the UUID is
+            //memReader.ReadMemory(Address + 0x48, 2048, 4, 0);
+
+            const int classCache = MonoLibraryOffsets.ImageClassCache;
+            var classCacheSize = this.ReadUInt32(classCache + MonoLibraryOffsets.HashTableSize);
+            var classCacheTableArray = this.ReadPtr(classCache + MonoLibraryOffsets.HashTableTable);
+
+            for (var tableItem = 0;
                 tableItem < (classCacheSize * Constants.SizeOfPtr);
                 tableItem += Constants.SizeOfPtr)
             {
-                for (var definition = this.Process.ReadPtr(classCacheTableArray + tableItem);
+                for (var definition = this.Process.ReadPtr(IntPtr.Add(classCacheTableArray, tableItem));
                     definition != Constants.NullPtr;
                     definition = this.Process.ReadPtr(definition + MonoLibraryOffsets.TypeDefinitionNextClassCache))
                 {
