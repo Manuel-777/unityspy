@@ -130,17 +130,9 @@
 
         private static IntPtr GetRootDomainFunctionAddress(byte[] moduleDump, ModuleInfo monoModuleInfo)
         {
-
-            var peHeader = new PeNet.PeFile(moduleDump);
-            var _if = peHeader.ImportedFunctions;
-            var ef = peHeader.ExportedFunctions;
-
-
             // offsets taken from https://docs.microsoft.com/en-us/windows/desktop/Debug/pe-format
             // ReSharper disable once CommentTypo
             var startIndex = moduleDump.ToInt32(0x3c); // lfanew
-
-
 
             var exportDirectoryIndex = startIndex + 0x88;// 0x78;
             var exportDirectory = moduleDump.ToInt32(exportDirectoryIndex);

@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HackF5.UnitySpy.Gui\HackF5.UnitySpy.Gui.csproj" />
-    <ProjectReference Include="..\HackF5.UnitySpy\HackF5.UnitySpy.csproj" />
   </ItemGroup>
 
   <ItemGroup>
