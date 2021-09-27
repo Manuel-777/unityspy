@@ -23,6 +23,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HackF5.UnitySpy.Hearthstone
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HackF5.UnitySpy", "HackF5.UnitySpy\HackF5.UnitySpy.csproj", "{47CD4647-790B-428D-B4E4-8B3267C63469}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MTGAMemorySpy", "MTGAMemorySpy\MTGAMemorySpy.csproj", "{A8252B68-134A-43F0-AE61-40AA3552321C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,6 +110,24 @@ Global
 		{47CD4647-790B-428D-B4E4-8B3267C63469}.test|x64.Build.0 = test|x64
 		{47CD4647-790B-428D-B4E4-8B3267C63469}.test|x86.ActiveCfg = test|x86
 		{47CD4647-790B-428D-B4E4-8B3267C63469}.test|x86.Build.0 = test|x86
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Debug|x64.Build.0 = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Debug|x86.Build.0 = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Release|x64.ActiveCfg = Release|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Release|x64.Build.0 = Release|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Release|x86.ActiveCfg = Release|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.Release|x86.Build.0 = Release|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.test|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.test|Any CPU.Build.0 = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.test|x64.ActiveCfg = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.test|x64.Build.0 = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.test|x86.ActiveCfg = Debug|Any CPU
+		{A8252B68-134A-43F0-AE61-40AA3552321C}.test|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jetbrains.Annotations" Version="2019.1.1" />
+    <PackageReference Include="Jetbrains.Annotations" VmtgaMemoryReaderersion="2019.1.1" />
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
