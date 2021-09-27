@@ -16,7 +16,7 @@ namespace HackF5.UnitySpy.Detail
 
         public const int TypeDefinitionBitFields = 0x14 + 0xc;
 
-        public const int TypeDefinitionByValArg = 0x74 + 0x48 + 0x18;
+        public const int TypeDefinitionByValArg = 0x74 + 0x44; // 0x74 + 0x48 + 0x18;
 
         public const int TypeDefinitionFieldCount = 0xa4 + 0x34 + 0x10 + 0x18;
 

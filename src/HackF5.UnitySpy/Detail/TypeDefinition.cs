@@ -66,12 +66,12 @@
 
 
 
-            if (Name == "NonGenericType")
+            if (Name.StartsWith ( "GenericType" ) && ClassKind == MonoClassKind.GTg)
             {
                 var firstField = this.ReadPtr(MonoLibraryOffsets.TypeDefinitionFields);
                 //IReadOnlyList<FieldDefinition> fields = GetFields();
                 MemoryReadingUtils memReader = new MemoryReadingUtils(this.Process);
-                //memReader.ReadMemory(Address + MonoLibraryOffsets.TypeDefinitionNamespace, 200, 4, 0);
+                memReader.ReadMemory(Address + MonoLibraryOffsets.TypeDefinitionRuntimeInfo + 0x10, 200, 4, 1);
             }
         }
 

@@ -214,12 +214,16 @@
             var arrayDefinition = type.Image.GetTypeDefinition(arrayDefinitionPtr);
             var elementDefinition = type.Image.GetTypeDefinition(this.ReadPtr(arrayDefinitionPtr));
 
-            var count = this.ReadInt32(ptr + 0xc);
-            var start = ptr + 0x10;
+
+            MemoryReadingUtils memReader = new MemoryReadingUtils(this);
+            //memReader.ReadMemory(ptr, 200, 4, 1);
+
+            var count = this.ReadInt32(ptr + 0xc + 0xc);
+            var start = ptr + 0x10 + 0x10;
             var result = new object[count];
             for (var i = 0; i < count; i++)
             {
-                result[i] = elementDefinition.TypeInfo.GetValue(IntPtr.Add(start, i * arrayDefinition.Size));
+                result[i] = elementDefinition.TypeInfo.GetValue(start + i * 0x8/*arrayDefinition.Size*/);
             }
 
             return result;

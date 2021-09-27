@@ -14,10 +14,8 @@
         public TypeInfo(AssemblyImage image, IntPtr address)
             : base(image, address)
         {
-            this.Data = (IntPtr) this.ReadUInt64(0x0);
-            this.Attrs = this.ReadUInt32(0x8);
-            //this.Data = this.ReadUInt32(0x0);
-            //this.Attrs = this.ReadUInt32(0x4);
+            this.Data = (IntPtr) this.ReadUInt64(0x0); //this.Data = this.ReadUInt32(0x0);
+            this.Attrs = this.ReadUInt32(0x4 + 0x4);
         }
 
         public uint Attrs { get; }
