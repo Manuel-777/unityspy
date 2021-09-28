@@ -35,8 +35,7 @@
     <DllExportMetaLibName>DllExport.dll</DllExportMetaLibName>
     <DllExportNamespace>MTGAMemorySpy</DllExportNamespace>
     <DllExportDDNSCecil>true</DllExportDDNSCecil>
-    <DllExportSkipOnAnyCpu>false</DllExportSkipOnAnyCpu>
-    <DllExportPlatform>Auto</DllExportPlatform>
+    <PlatformTarget>x64</PlatformTarget>
     <DllExportOrdinalsBase>1</DllExportOrdinalsBase>
     <DllExportGenExpLib>false</DllExportGenExpLib>
     <DllExportOurILAsm>false</DllExportOurILAsm>
