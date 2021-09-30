@@ -12,6 +12,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
   </PropertyGroup>
+  <PropertyGroup Label="8337224c9ad9e356:PreProc">
+    <DebugType Condition="'$(DebugType)'!='full' And '$(DebugType)'!='pdbonly'" Label="8337224c9ad9e356:PreProc">pdbonly</DebugType>
+  </PropertyGroup>
   <PropertyGroup>
     <DllExportIdent>CF450AF1-F4A7-4A8E-A70D-4D1B4660AB1F</DllExportIdent>
     <DllExportMetaLibName>DllExport.dll</DllExportMetaLibName>
@@ -26,8 +29,10 @@
     <DllExportTimeout>30000</DllExportTimeout>
     <DllExportPeCheck>2</DllExportPeCheck>
     <DllExportPatches>0</DllExportPatches>
-    <DllExportPreProcType>0</DllExportPreProcType>
-    <DllExportPostProcType>0</DllExportPostProcType>
+    <DllExportPreProcType>25</DllExportPreProcType>
+    <DllExportILMerge />
+    <DllExportPostProcType>6</DllExportPostProcType>
+    <DllExportProcEnv>$(SolutionPath);$(MSBuildThisFileFullPath);TargetDir</DllExportProcEnv>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DllExport">
@@ -35,17 +40,26 @@
       <Visible>false</Visible>
       <Wz>1</Wz>
     </PackageReference>
+    <PackageReference Include="ilmerge">
+      <Version>3.0.29</Version>
+    </PackageReference>
     <PackageReference Include="Jetbrains.Annotations" Version="2019.1.1" />
-    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="2.9.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="microsoft.csharp" Version="4.5.0" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="microsoft.csharp" Version="4.6.0" />
   </ItemGroup>
+  <Target Name="DllExportPreProc" BeforeTargets="DllExportMod" Label="8337224c9ad9e356:PreProc">
+    <Copy SourceFiles="$(DllExportMetaLibFullPath)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
+    <Exec Command="$(ILMergeConsolePath)  $(TargetFileName) /out:$(TargetFileName).ilm0.dll" WorkingDirectory="$(TargetDir)" ContinueOnError="true" />
+    <Move SourceFiles="$(TargetDir)$(TargetFileName).ilm0.dll" DestinationFiles="$(TargetDir)$(TargetFileName)" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
+    <Delete Files="$(TargetDir)$(DllExportMetaLibName)" ContinueOnError="true" />
+  </Target>
+  <Target Name="DllExportPreProcAfter" AfterTargets="DllExportMod" Label="8337224c9ad9e356:PreProc">
+    <Delete Files="$(TargetDir)$(TargetFileName).ilm0.pdb" ContinueOnError="true" />
+  </Target>
+  <Target Name="DllExportPostProc" Label="8337224c9ad9e356:PostProc" />
+  <Target Name="DllExportPostProcForTargetDir" AfterTargets="DllExportPostProc" Label="8337224c9ad9e356:PostProc" Outputs="%(DllExportDependentsTargetDir.Identity)">
+    <Copy SourceFiles="@(DllExportDirX86)" DestinationFolder="%(DllExportDependentsTargetDir.Identity)x86\" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="@(DllExportDirX64)" DestinationFolder="%(DllExportDependentsTargetDir.Identity)x64\" OverwriteReadOnlyFiles="true" />
+  </Target>
   <ImportGroup Label=".NET DllExport">
     <Import Project="$(SolutionDir)packages\DllExport.1.7.4\tools\net.r_eg.DllExport.targets" Condition="Exists($([MSBuild]::Escape('$(SolutionDir)packages\DllExport.1.7.4\tools\net.r_eg.DllExport.targets')))" Label="8337224c9ad9e356" />
   </ImportGroup>

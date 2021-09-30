@@ -1,5 +1,6 @@
 ﻿namespace HackF5.UnitySpy
 {
+    using System;
     using System.Diagnostics;
     using System.Linq;
     using HackF5.UnitySpy.Detail;
@@ -17,8 +18,9 @@
             }
             catch
             {
-                // 
+                // Do nothing
             }
+
             return process;
         }
 
@@ -39,17 +41,17 @@
 
             var cardsDictionary = image?["WrapperController"]["<Instance>k__BackingField"]["_inventoryServiceWrapper"]["<Cards>k__BackingField"]["entries"];
 
-            var mgdClass = (ManagedClassInstance)cardsDictionary;
+            // var mgdClass = (ManagedClassInstance)cardsDictionary;
             var dict = (object[])cardsDictionary["entries"];
-            var firstEntry = (ManagedStructInstance)dict.FirstOrDefault();
 
+            // var firstEntry = (ManagedStructInstance)dict.FirstOrDefault();
             var cards = string.Empty;
 
             foreach (var entry in dict.OfType<ManagedStructInstance>())
             {
                 var data = entry.GetData(4 * 4);
-                var cardId = System.BitConverter.ToInt32(data, 0);
-                var amount = System.BitConverter.ToInt32(data, 12);
+                var cardId = BitConverter.ToInt32(data, 0);
+                var amount = BitConverter.ToInt32(data, 12);
 
                 cards += cardId + "," + amount + ",";
             }

@@ -1,6 +1,7 @@
 ﻿namespace HackF5.UnitySpy.Detail
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Diagnostics;
@@ -8,7 +9,6 @@
     using System.Text;
     using HackF5.UnitySpy.Util;
     using JetBrains.Annotations;
-    using System.Collections.Concurrent;
 
     /// <summary>
     /// Represents an unmanaged _MonoClass instance in a Mono process. This object describes the type of a class or
