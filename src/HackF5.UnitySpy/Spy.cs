@@ -1,14 +1,12 @@
 ﻿namespace HackF5.UnitySpy
 {
-    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using HackF5.UnitySpy.Detail;
 
     public static class Spy
     {
-        // private IAssemblyImage image;
-
+        [DllExport]
         public static int GetPID(string processName)
         {
             var process = -1;
@@ -24,6 +22,7 @@
             return process;
         }
 
+        [DllExport]
         public static string GetUUID(int pid)
         {
             var image = AssemblyImageFactory.Create(pid);
@@ -33,6 +32,7 @@
             return uuid ?? "Not Found";
         }
 
+        [DllExport]
         public static string GetCards(int pid)
         {
             var image = AssemblyImageFactory.Create(pid);
