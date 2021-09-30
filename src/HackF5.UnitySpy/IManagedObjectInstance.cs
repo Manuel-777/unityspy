@@ -1,6 +1,5 @@
 ﻿namespace HackF5.UnitySpy
 {
-    using System;
     using JetBrains.Annotations;
     using System;
 
