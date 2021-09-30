@@ -93,7 +93,16 @@
                     definition != Constants.NullPtr;
                     definition = this.Process.ReadPtr(definition + this.Process.MonoLibraryOffsets.TypeDefinitionNextClassCache))
                 {
-                    definitions.GetOrAdd(definition, new TypeDefinition(this, definition));
+                    var typeDef = new TypeDefinition(this, definition);
+                    switch (typeDef.Name)
+                    {
+                        case "WrapperController":
+                        case "PAPA":
+                            definitions.GetOrAdd(definition, typeDef);
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
 
